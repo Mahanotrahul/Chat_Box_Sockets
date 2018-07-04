@@ -1,37 +1,21 @@
-## Welcome to GitHub Pages
+## Welcome to Sockets
 
-You can use the [editor on GitHub](https://github.com/Mahanotrahul/Sockets/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+Code for Socket Programming
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+This Repository Sockets is an open-source code for Socket-Programming with a single Client and Server(with a fixed IP) written in Python.
 
-### Markdown
+If you want to contribute to this Repo, Please make sure you use [Github Issues](https://github.com/Mahanotrahul/Sockets/issues) so that we can track requests and bugs.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+The Sockets project strives to abide by generally accepted best practices in open-source software development.
 
-```markdown
-Syntax highlighted code block
 
-# Header 1
-## Header 2
-### Header 3
 
-- Bulleted
-- List
 
-1. Numbered
-2. List
 
-**Bold** and _Italic_ and `Code` text
 
-[Link](url) and ![Image](src)
-```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Mahanotrahul/Sockets/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
 
 ### Support or Contact
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+Having trouble or you have any queries with this Repo? 
+Email me at [thecodeboxed@gmail.com](mailto:thecodeboxed@gmail.com) and I’ll help you sort it out.
