@@ -91,10 +91,10 @@ def SEND(dataMessage):
     weight_at_recharge_status = 0
     #print("CONSUMER_ID :" + str(CONSUMER_ID) +  "\tDate :" + str(read_date) + "\tTime :" + str(read_time) + "\tWeight : " + str(weight))
 
-    host="sql143.main-hosting.eu"
-    user="u402156879_lpg1"
-    passwd="!prajjwala2k18"
-    db="u402156879_lpg1"
+    host="<confidential>"
+    user="<confidential>"
+    passwd="<confidential>"
+    db="<confidential>"			
 
     #Connecting to database
     print("\nGot the Credentials")
