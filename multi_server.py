@@ -8,9 +8,11 @@ from queue import Queue
 host = ''
 port = 5561
 NUMBER_OF_THREADS = 2
+CURRENT_CLIENTS = 0
 JOB_NUMBER = [1, 2]
 all_connections = []
 all_address = []
+all_names = []
 queue = Queue()
 
 
@@ -35,17 +37,46 @@ def accepting_connections(s):
 
     del all_connections[:]
     del all_address[:]
+    global CURRENT_CLIENTS
 
     while True:
+        print('Waiting to accept connections')
         try:
             conn, address = s.accept()
             s.setblocking(1)    # A server times out and the connection is closed if no task is performed for a certain time. setblocking prevents that from happening i.e. it prevents timeout
             print("Client Connected : " + address[0] + " Port : " + str(address[1]))
+            CURRENT_CLIENTS += 1
             all_connections.append(conn)
             all_address.append(address)
-        except:
-            print("Error accepting connections")
+            t = threading.Thread(target = receive_data, args=(CURRENT_CLIENTS - 1,))
+            t.daemon = True
+            t.start()
 
+        except Exception as e:
+            print("Error accepting connections. Error : " + str(e))
+
+def receive_data(CLIENT_ID):
+    conn = all_connections[CLIENT_ID]
+    print('Waiting for name of the client')
+
+    data = conn.recv(1024)
+    
+    name = data.decode('utf-8')
+    print('Recieved the name of the client. Client ID = ' + str(CLIENT_ID) + '. Name =  ' + str(name))
+    all_names.append(name)
+    
+    while True:
+        #print('Inside the thread - receive_data()')
+        data = conn.recv(1024)
+        data = data.decode('utf-8')
+        if not data:
+            print('Client' + str(name) + 'got disconnected')
+            del all_connections[CLIENT_ID]
+            del all_names[CLIENT_ID]
+            break
+        else:
+            print('Client ' + str(CLIENT_ID), end = '')
+            print(data)
 
 # 2nd Thread
 # Functions - 
@@ -55,6 +86,7 @@ def accepting_connections(s):
 
 def start_turtle():
     while True:
+        #print('Inside Turtle')
         cmd = input("Turtle> ")
         if(cmd == 'list'):
             list_connections()
@@ -62,6 +94,20 @@ def start_turtle():
             conn = get_target(cmd)
             if(conn is not None):
                 send_target_command(conn)
+        elif(cmd == 'chat'):
+            ## Loop for sending data to clients
+            while True:
+                try:
+                    message = input('Turtle> ')
+                    if(message == 'exit'):
+                        break
+                    elif(len(str.encode(message)) > 0):
+                        #print('Trying to send the command. Please wait')
+                        ## Sending data to all the clients
+                        for conn in all_connections:
+                            conn.send(str.encode(message))
+                except Exception as e:
+                    print('Error sending command' + str(e))
         else:
             print('Command not recognised')
 
