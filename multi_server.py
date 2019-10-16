@@ -3,10 +3,11 @@ import sys
 import time
 import threading
 from queue import Queue
+import subprocess
 
 
 host = ''
-port = 5561
+port = 5563
 NUMBER_OF_THREADS = 2
 CURRENT_CLIENTS = 0
 JOB_NUMBER = [1, 2]
@@ -15,6 +16,9 @@ all_address = []
 all_names = []
 queue = Queue()
 
+def change_cmd_title():
+    title = "title Server | Clients Connected " + str(CURRENT_CLIENTS)
+    cmd = subprocess.Popen(title[:],  shell = True, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
 
 def create_socket():
     try:
@@ -45,9 +49,12 @@ def accepting_connections(s):
             conn, address = s.accept()
             s.setblocking(1)    # A server times out and the connection is closed if no task is performed for a certain time. setblocking prevents that from happening i.e. it prevents timeout
             print("Client Connected : " + address[0] + " Port : " + str(address[1]))
+            conn.send(str.encode(str(CURRENT_CLIENTS)))
             CURRENT_CLIENTS += 1
+            change_cmd_title()
             all_connections.append(conn)
             all_address.append(address)
+            all_names.append('<unknown>')
             t = threading.Thread(target = receive_data, args=(CURRENT_CLIENTS - 1,))
             t.daemon = True
             t.start()
@@ -63,7 +70,7 @@ def receive_data(CLIENT_ID):
     
     name = data.decode('utf-8')
     print('Recieved the name of the client. Client ID = ' + str(CLIENT_ID) + '. Name =  ' + str(name))
-    all_names.append(name)
+    all_names[CLIENT_ID] =  name
     
     while True:
         #print('Inside the thread - receive_data()')
@@ -74,9 +81,18 @@ def receive_data(CLIENT_ID):
             del all_connections[CLIENT_ID]
             del all_names[CLIENT_ID]
             break
+        elif(data[0] == '@'):
+            id = data.split(' ')
+            id = int(id[0][1:])
+            send_conn = all_connections[id]
+            send_conn.send(str.encode(data))
         else:
-            print('Client ' + str(CLIENT_ID), end = '')
+            print(str(CLIENT_ID) + ' - ' + str(all_names[CLIENT_ID]) +  '> ', end = '')
             print(data)
+            for i, conn in enumerate(all_connections):
+                if(i is not CLIENT_ID):
+                    conn.send(str.encode(str(CLIENT_ID) + ' - ' + all_names[CLIENT_ID] + '> ' + data))
+
 
 # 2nd Thread
 # Functions - 
@@ -96,16 +112,28 @@ def start_turtle():
                 send_target_command(conn)
         elif(cmd == 'chat'):
             ## Loop for sending data to clients
+            print('-----Starting chat room-----')
             while True:
                 try:
                     message = input('Turtle> ')
                     if(message == 'exit'):
                         break
+                    elif(message == 'list'):
+                        list_connections()
+                    elif('select' in cmd):
+                        conn = get_target(cmd)
+                        if(conn is not None):
+                            send_target_command(conn)
+                    elif(message[0] == '@'):
+                        id = message.split(' ')
+                        id = int(id[0][1:])
+                        conn = all_connections[id]
+                        conn.send(str.encode(message))
                     elif(len(str.encode(message)) > 0):
                         #print('Trying to send the command. Please wait')
                         ## Sending data to all the clients
                         for conn in all_connections:
-                            conn.send(str.encode(message))
+                            conn.send(str.encode('root> ' + message))
                 except Exception as e:
                     print('Error sending command' + str(e))
         else:
@@ -114,13 +142,6 @@ def start_turtle():
 def list_connections():
     results = ''
     for i, conn in enumerate(all_connections):
-        try:
-            conn.send(str.encode(' '))
-            conn.recv(20480)
-        except:
-            del all_connections[i]
-            del all_address[i]
-            continue
         results += str(i) + " " + str(all_address[i][0]) + " " + str(all_address[i][1]) + '\n'
     print("-----Clients-----" + '\n' + results)
 

@@ -7,12 +7,13 @@ from queue import Queue
 import time
 
 host = '127.0.0.1'
-port = 5561
+port = 5563
 NUMBER_OF_THREADS = 2
 JOB_NUMBER = [1, 2]
 queue = Queue()
 TTL = 10
-
+name = ""
+title = ""
 
 def connect_to_server():
     global TTL
@@ -29,6 +30,9 @@ def connect_to_server():
 
 s = connect_to_server()
 print('Connected to the server')
+data = s.recv(1024)
+CLIENT_ID = int(data)
+
 
 
 def receive_data(s):
@@ -40,15 +44,22 @@ def receive_data(s):
             s = connect_to_server()
         elif(data[:2].decode('utf-8') == 'cd'):
             os.chdir(data[3:].decode('utf-8'))
-        if(len(data) > 0):
-            print('root> ')
+        elif(len(data) > 0 and data[0] == '@'):
+            l = len(data.split(' ')[0])
+            print(str(data[0:l]) + '> ')
+            print(data[l + 1:].decode('utf-8'))
+        elif(len(data) > 0):
+            #print('root> ', end = "")
             print(data.decode('utf-8'))
 
 def send_data(s):
     while True:
         #print('Inside the Thread - send data()')
         message = input('> ')
-        s.send(str.encode(message))
+        if(message[0] == '@' and message.split(' ')[0][1:] == CLIENT_ID):
+            print("You can't send message to yourself")
+        else:
+            s.send(str.encode(message))
 
 
 
@@ -68,13 +79,16 @@ def create_jobs():
 
 # Do next job that is in the queue (handle connections, send commands)
 def work():
+    global name
     while True:
         x = queue.get()
         if(x == 1):
             receive_data(s)
         elif(x==2):
-            message = input('Turtle> Type your name>>')
-            s.send(str.encode(message))
+            name = input('Turtle> Type your name>>')
+            s.send(str.encode(name))
+            title = "title Client: " + str(CLIENT_ID) + " - " + name
+            cmd = subprocess.Popen(title[:],  shell = True, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
             send_data(s)
         queue.task_done()
 
