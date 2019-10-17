@@ -7,13 +7,14 @@ import subprocess
 
 
 host = ''
-port = 5563
+port = 5561
 NUMBER_OF_THREADS = 2
 CURRENT_CLIENTS = 0
 JOB_NUMBER = [1, 2]
 all_connections = []
 all_address = []
 all_names = []
+all_lock_objects = []
 queue = Queue()
 
 def change_cmd_title():
@@ -55,9 +56,11 @@ def accepting_connections(s):
             all_connections.append(conn)
             all_address.append(address)
             all_names.append('<unknown>')
+            all_lock_objects.append(threading.Lock())
             t = threading.Thread(target = receive_data, args=(CURRENT_CLIENTS - 1,))
             t.daemon = True
             t.start()
+
 
         except Exception as e:
             print("Error accepting connections. Error : " + str(e))
@@ -69,9 +72,10 @@ def receive_data(CLIENT_ID):
     data = conn.recv(1024)
     
     name = data.decode('utf-8')
-    print('Recieved the name of the client. Client ID = ' + str(CLIENT_ID) + '. Name =  ' + str(name))
+    print('Received name of the client. Client ID = ' + str(CLIENT_ID) + '. Name =  ' + str(name))
     all_names[CLIENT_ID] =  name
     
+    all_lock_objects[CLIENT_ID].acquire()
     while True:
         #print('Inside the thread - receive_data()')
         data = conn.recv(1024)
@@ -107,9 +111,9 @@ def start_turtle():
         if(cmd == 'list'):
             list_connections()
         elif('select' in cmd):
-            conn = get_target(cmd)
+            conn, cl_id = get_target(cmd)
             if(conn is not None):
-                send_target_command(conn)
+                send_target_command(conn, cl_id)
         elif(cmd == 'chat'):
             ## Loop for sending data to clients
             print('-----Starting chat room-----')
@@ -121,9 +125,10 @@ def start_turtle():
                     elif(message == 'list'):
                         list_connections()
                     elif('select' in cmd):
-                        conn = get_target(cmd)
+                        conn, cl_id = get_target(cmd)
                         if(conn is not None):
-                            send_target_command(conn)
+                            send_target_command(conn, cl_id)
+
                     elif(message[0] == '@'):
                         id = message.split(' ')
                         id = int(id[0][1:])
@@ -153,29 +158,31 @@ def get_target(cmd):
         conn = all_connections[target]
         print('You are now connected to ' + str(all_address[target][0]))
         print(str(all_address[target][0]) + ">", end="")
-        return conn
+        return conn, target
     except:
         print('Selection not valid')
 
 
 
-def send_target_command(conn):
-    while True:
-        try:
-            message = input("")
-            if(message == 'exit'):
-                break
-            elif(len(str.encode(message)) > 0):
-                print('Trying to send the command. Please wait')
-                conn.send(str.encode(message))
-                client_response = str(conn.recv(20480), 'utf-8')
-                if not client_response:
-                    print('Client got disconnected')
+def send_target_command(conn, cl_id):
+        while True:
+            print('Type command> ')
+            try:
+                message = input("")
+                if(message == 'exit'):
                     break
-                else:
-                    print(client_response, end="")
-        except Exception as e:
-            print('Error sending command' + str(e))
+                elif(len(str.encode(message)) > 0):
+                    print('Trying to send the command. Please wait')
+                    conn.send(str.encode(message))
+                    client_response = str(conn.recv(20480), 'utf-8')
+                    if not client_response:
+                        print('Client got disconnected')
+                        break
+                    else:
+                        print(client_response, end="")
+                        print('Response printed. Going somewhere else')
+            except Exception as e:
+                print('Error sending command' + str(e))
 
 
     

