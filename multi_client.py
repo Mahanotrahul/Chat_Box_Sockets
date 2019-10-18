@@ -40,7 +40,7 @@ def receive_data(s):
         #print('Inside the Thread - recieve data()')
         data = s.recv(1024)
         data = data.decode('utf-8')
-        print('Received' + str(data))
+        #print('Received' + str(data))
         if not data:
             print('Server was reset or closed. \n Waiting to connect to the server')
             s = connect_to_server()
