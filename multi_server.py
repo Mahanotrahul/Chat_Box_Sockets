@@ -18,6 +18,7 @@ all_lock_objects = []
 queue = Queue()
 chat = 0
 active_flags = []
+select_flags = []
 
 def active_clients():
     return sum([1 for i in active_flags if i == 1])
@@ -50,6 +51,7 @@ def accepting_connections(s):
     del all_connections[:]
     del all_address[:]
     global CURRENT_CLIENTS
+    global select_flags
 
     while True:
         print('Waiting to accept connections')
@@ -63,6 +65,7 @@ def accepting_connections(s):
             all_connections.append(conn)
             all_address.append(address)
             active_flags.append(1)
+            select_flags.append(0)
             all_names.append('<unknown>')
             all_lock_objects.append(threading.Lock())
             t = threading.Thread(target = receive_data, args=(CURRENT_CLIENTS - 1,))
@@ -122,6 +125,9 @@ def receive_data(CLIENT_ID):
                 for i, conn in enumerate(all_connections):
                     if(i is not CLIENT_ID and active_flags[i] == 1):
                         conn.sendall(str.encode(str(CLIENT_ID) + ' - ' + all_names[CLIENT_ID] + '> ' + data))
+        elif(select_flags[CLIENT_ID] == 1):
+            print(str(CLIENT_ID) + ' - ' + str(all_names[CLIENT_ID]) +  '> ', end = '')
+            print(data)
         else:
             conn.sendall(str.encode('-- Message: Chat room not yet started. Please wait. --'))
 
@@ -202,40 +208,50 @@ def list_connections():
 
 
 def get_target(cmd):
+    global select_flags
     try:
         target = cmd.replace('select ', '')
         target = int(target)
-        if(all_active[target] == 1):
-            conn = all_connections[target]
+        conn = all_connections[target]
+        if(active_flags[target] == 1 and conn is not None):
             print('You are now connected to ' + str(all_address[target][0]))
-            print(str(all_address[target][0]) + ">", end="")
+            print(str(all_address[target][0]) + "> ", end="")
+            select_flags[target] = 1
             return conn, target
         else:
-            print('Selection not valid')
-    except:
-        print('Selection not valid')
+            print('Selection not valid. Client not connected.')
+            return None, None
+    except Exception as e:
+        print('Selection not valid ' + str(e))
+        return None, None
 
 
 
 def send_target_command(conn, cl_id):
+    global select_flags
+    if(select_flags[cl_id] == 1):
         while True:
-            print('Type command> ')
+            #print('Type command> ')
             try:
                 message = input("")
                 if(message == 'exit'):
+                    select_flags[cl_id] = 0
                     break
                 elif(len(str.encode(message)) > 0):
-                    print('Trying to sendall the command. Please wait')
+                    #print('Trying to sendall the command. Please wait')
                     conn.sendall(str.encode(message))
                     client_response = str(conn.recv(20480), 'utf-8')
                     if not client_response:
                         print('Client got disconnected')
                         break
-                    else:
-                        print(client_response, end="")
-                        print('Response printed. Going somewhere else')
+                    #else:
+                        #print(client_response, end="")
+                        #print('Response printed. Going somewhere else')
             except Exception as e:
                 print('Error sending command' + str(e))
+    else:
+        select_flags[cl_id] = 0     # updated because it was set to 1 in get_target()
+        print('Message: Invalid Operation. Client cannot be selected')
 
 
     

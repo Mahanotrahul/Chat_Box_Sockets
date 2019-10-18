@@ -46,6 +46,7 @@ def receive_data(s):
             s = connect_to_server()
         elif(data[:2] == 'cd'):
             os.chdir(data[3:])
+            s.send(str.encode(' '))
             print('directory changed')
         elif(len(data) > 0 and data[0] == '@'):
             l = len(data.split(' ')[0])
@@ -60,6 +61,7 @@ def receive_data(s):
             currentWD = os.getcwd() + '>'
             #print(output_str)
             s.send(str.encode(output_str + currentWD))
+            s.send(str.encode(' '))
             print(output_str)
         else:
             #print('root> ', end = "")
