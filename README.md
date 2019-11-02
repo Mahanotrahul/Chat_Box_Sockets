@@ -6,9 +6,9 @@ This Repository Sockets is an open-source code for Socket-Programming Chat Box w
 1. Server_File - multi_server.py
 2. Client File - multi_client.py
 
-If you want to contribute to this Repo, Please make sure you use [Github Issues](https://github.com/Mahanotrahul/Sockets/issues) so that we can track requests and bugs.
+If you want to contribute to this Repo, Please make sure you use [Github Issues](https://github.com/Mahanotrahul/Sockets/issues) so that I can track requests and bugs.
 
-The Sockets project strives to abide by generally accepted best practices in open-source software development.
+This Chat_Box_Sockets project strives to abide by generally accepted best practices in open-source software development.
 
 
 
