@@ -10,6 +10,8 @@ If you want to contribute to this Repo, Please make sure you use [Github Issues]
 
 This Chat_Box_Sockets project strives to abide by generally accepted best practices in open-source software development.
 
+#Note: If you find this code useful, please leave a star :)
+
 
 
 
